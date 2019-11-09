@@ -1,7 +1,7 @@
 tcp_server
 =====
 
-An OTP library
+A simple tcp server written as OTP library in Erlang.
 
 Build
 -----
