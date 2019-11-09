@@ -1,6 +1,6 @@
 -module(tcp_server).
 
--export([]).
+-export([loop/1, start_nano_server/0]).
 
 start_nano_server() ->
   {ok, Listen} = gen_tcp:listen(3000, [binary, {packet, 4},
