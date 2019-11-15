@@ -2,7 +2,6 @@
 
 -export([
   loop/1,
-  nano_client_eval/1,
   start_parallel_server/0,
   start_seq_server/0
 ]).
@@ -33,6 +32,7 @@ seq_loop(Listen) ->
 %%% PARALLEL SERVER
 %% Accepts multiple connections at the same time.
 %% Spawns a new process for every accepted connection.
+%% It might be a good idea to limit the number of processes, though.
 
 start_parallel_server() ->
   {ok, Listen} = gen_tcp:listen(3000, server_configuration()),
@@ -40,6 +40,7 @@ start_parallel_server() ->
 
 par_connect(Listen) ->
   {ok, Socket} = gen_tcp:accept(Listen),
+  inet:setopts(Socket, server_configuration()),
   spawn(fun() -> par_connect(Listen) end),
   loop(Socket).
 
@@ -49,18 +50,10 @@ loop(Socket) ->
       io:format("Server received binary = ~p~n", [Bin]),
       Str = binary_to_term(Bin),
       io:format("Server (unpacked)  ~p~n", [Str]),
-      Reply = string2value(Str),
+      Reply = helpers:string_to_value(Str),
       io:format("Server replying = ~p~n", [Reply]),
       gen_tcp:send(Socket, term_to_binary(Reply)),
       loop(Socket);
     {tcp_closed, Socket} ->
       io:format("Server socket closed.~n")
   end.
-
-%% Helper
-string2value(Str) ->
-  {ok, Tokens, _}   = erl_scan:string(Str ++ (".")),
-  {ok, Exprs}       = erl_parse:parse_exprs(Tokens),
-  Bindings          = erl_eval:new_bindings(),
-  {value, Value, _} = erl_eval:exprs(Exprs, Bindings),
-  Value.
