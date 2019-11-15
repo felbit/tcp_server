@@ -1,14 +1,23 @@
 -module(tcp_server).
 
--export([loop/1, nano_client_eval/1, start_nano_server/0]).
+-export([loop/1, nano_client_eval/1, start_seq_server/0]).
 
-start_nano_server() ->
+%%% SEQUENTIAL SERVER
+%% Accepts one connetcion at a time.
+
+start_seq_server() ->
   {ok, Listen} = gen_tcp:listen(3000, [binary, {packet, 4},
                                        {reuseaddr, true},
                                        {active, true}]),
+  seq_loop(Listen).
+
+seq_loop(Listen) ->
   {ok, Socket} = gen_tcp:accept(Listen),
-  gen_tcp:close(Listen),
-  loop(Socket).
+  loop(Socket),
+  seq_loop(Listen).
+
+
+
 
 loop(Socket) ->
   receive
