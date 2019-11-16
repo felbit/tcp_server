@@ -46,7 +46,8 @@ loop(Socket) ->
 
       %% do something with the data (this is currently just dummy code ...)
       io:format("Server received binary = ~p~n", [Bin]),
-      gen_tcp:send(Socket, term_to_binary({200, ok})),
+      Content = binary_to_list(Bin),
+      gen_tcp:send(Socket, response(Content)),
 
       %% Partial blocking server needs reactivation of active message reception
       inet:setopts(Socket, [{active, once}]),
@@ -54,3 +55,10 @@ loop(Socket) ->
     {tcp_closed, Socket} ->
       io:format("Server socket closed.~n")
   end.
+
+response(Payload) ->
+  P = iolist_to_binary(Payload),
+  iolist_to_binary(
+    io_lib:fwrite(
+      "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: ~p\n\n~s",
+      [size(P), P])).
