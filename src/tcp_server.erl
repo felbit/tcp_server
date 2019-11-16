@@ -37,8 +37,6 @@ start_parallel_server() ->
 
 par_connect(Listen) ->
   {ok, Socket} = gen_tcp:accept(Listen),
-  % Setting options can also be done by inet:setopts/2:
-  %inet:setopts(Socket, configuration:hybrid_server()),
   spawn(fun() -> par_connect(Listen) end),
   loop(Socket).
 
@@ -48,12 +46,7 @@ loop(Socket) ->
 
       %% do something with the data (this is currently just dummy code ...)
       io:format("Server received binary = ~p~n", [Bin]),
-      Str = binary_to_term(Bin),
-      io:format("Server (unpacked)  ~p~n", [Str]),
-      Reply = helpers:string_to_value(Str),
-      io:format("Server replying = ~p~n", [Reply]),
-      gen_tcp:send(Socket, term_to_binary(Reply)),
-      %% end of dummy code.
+      gen_tcp:send(Socket, term_to_binary({200, ok})),
 
       %% Partial blocking server needs reactivation of active message reception
       inet:setopts(Socket, [{active, once}]),
